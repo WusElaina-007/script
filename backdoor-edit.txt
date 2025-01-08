@@ -39,9 +39,8 @@ local sent = false
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-local checkIn = {"Workspace", "ReplicatedStorage", "StarterGui", "CoreGui", "Lighting", "ServerScriptService", "PlayerGui"}
-local names = {"Delete", "Deletar", "Remove", "Destroy", "Clean", "Clear", "Bullet", "Bala", "Shoot", "Shot", "Fire", "Segway", "Handless", "Sword", "Attack", "DeleteCar", "RemovePermRank", "ShowBannedUser", "RemoveStat", "CreateBanMenu", "getSubscriptionProductinfo", "Kick", "Teleport", "Ban", "Shutdown", "Explode", "Heal", "Modify"
-}
+local checkIn = {"Workspace", "ReplicatedStorage", "StarterGui", "CoreGui", "Lighting", "ServerScriptService", "PlayerGui", "Teams"}
+local names = {"GetData", "SetData", "FetchData", "SaveData", "DeleteData", "LoadData", "Kick", "Ban", "Mute", "Unmute", "Promote", "Demote", "AddPoints", "RemovePoints", "Teleport", "Open", "Close", "Start", "Stop", "Enable", "Disable", "Activate", "Deactivate", "Fire", "Shoot", "Reload", "Aim", "Attack", "Hit", "Player", "Players", "Character", "Humanoid", "Team", "Target", "Tool", "Item", "Weapon", "Gear", "Vehicle", "Car", "Object", "Door", "Gate", "Elevator", "Platform", "Bridge", "Effect", "Particle", "Explosion", "Heal", "Damage", "Repair", "Server", "Client", "Match", "Round", "Lobby", "Session", "Admin", "Rank", "Permissions", "Stats", "Logs", "Punishment", "Status", "Progress", "Complete", "Pending", "Available"}
 if char then
 blurefct(20)
 Notify("Vulnerability Checker", "Looking up for remotes, may take a while.", 3)
