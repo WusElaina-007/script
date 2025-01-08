@@ -1,0 +1,158 @@
+-- Các dịch vụ cần thiết
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
+
+-- Hàm gửi thông báo
+local function Notify(title, text, duration)
+    StarterGui:SetCore("SendNotification", {
+        Title = title;
+        Text = text;
+        Duration = duration;
+    })
+end
+
+-- Danh sách các tên đáng nghi
+local suspiciousNames = {
+    "Delete", "Destroy", "Remove", "Fire", "Attack", "Ban", "Kick", "Tool", 
+    "Exploit", "Vulnerable", "God", "Admin", "Script", "Hurt", "Damage"
+}
+
+-- Danh sách các dịch vụ cần quét
+local servicesToCheck = {
+    Workspace,
+    ReplicatedStorage,
+    Players,
+    game:GetService("StarterPack"),
+    game:GetService("Lighting")
+}
+
+-- Lưu kết quả tìm kiếm
+local vulnerabilitiesFound = {}
+
+-- Tạo GUI để hiển thị tên lỗ hổng
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Frame = Instance.new("Frame", ScreenGui)
+local ScrollingFrame = Instance.new("ScrollingFrame", Frame)
+local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
+local CloseButton = Instance.new("TextButton", Frame) -- Nút đóng giao diện
+
+-- Định dạng giao diện
+ScreenGui.Name = "VulnerabilityScannerUI"
+Frame.Size = UDim2.new(0, 300, 0, 400)
+Frame.Position = UDim2.new(0.05, 0, 0.2, 0)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.Visible = false
+
+ScrollingFrame.Size = UDim2.new(1, 0, 0.9, 0) -- Điều chỉnh chiều cao để chừa chỗ cho nút
+ScrollingFrame.Position = UDim2.new(0, 0, 0.1, 0)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+CloseButton.Size = UDim2.new(0, 50, 0, 30)
+CloseButton.Position = UDim2.new(1, -55, 0, 5) -- Góc trên bên phải
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 85, 85)
+CloseButton.TextColor3 = Color3.new(1, 1, 1)
+CloseButton.Text = "X"
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextSize = 18
+
+-- Thêm tính năng kéo thả
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    Frame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- Thêm hành động nút "X"
+CloseButton.MouseButton1Click:Connect(function()
+    Frame.Visible = false
+end)
+
+-- Hàm hiển thị kết quả vào GUI
+local function ShowResults()
+    Frame.Visible = true
+    for _, vulnerability in pairs(vulnerabilitiesFound) do
+        local TextLabel = Instance.new("TextLabel", ScrollingFrame)
+        TextLabel.Size = UDim2.new(1, 0, 0, 30)
+        TextLabel.BackgroundTransparency = 0.5
+        TextLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        TextLabel.TextColor3 = Color3.fromRGB(255, 85, 85)
+        TextLabel.Font = Enum.Font.SourceSans
+        TextLabel.TextSize = 14
+        TextLabel.Text = "Lỗ hổng: " .. vulnerability.Name .. " | Loại: " .. vulnerability.Type
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, ScrollingFrame.CanvasSize.Y.Offset + 35)
+    end
+end
+
+-- Hàm quét lỗ hổng
+local function ScanForVulnerabilities()
+    Notify("Scanner", "Bắt đầu quét map...", 5)
+    for _, service in pairs(servicesToCheck) do
+        for _, object in pairs(service:GetDescendants()) do
+            -- Kiểm tra nếu tên đáng nghi
+            for _, name in pairs(suspiciousNames) do
+                if string.match(object.Name:lower(), name:lower()) then
+                    if object:IsA("RemoteEvent") or object:IsA("RemoteFunction") then
+                        table.insert(vulnerabilitiesFound, {
+                            Name = object.Name,
+                            Type = object.ClassName,
+                            Path = object:GetFullName()
+                        })
+                    end
+                end
+            end
+        end
+    end
+
+    -- Hiển thị kết quả
+    if #vulnerabilitiesFound > 0 then
+        Notify("Scanner", "Tìm thấy lỗ hổng! Kiểm tra GUI.", 5)
+        ShowResults()
+    else
+        Notify("Scanner", "Không tìm thấy lỗ hổng!", 5)
+    end
+end
+
+-- Chạy script quét
+ScanForVulnerabilities()
